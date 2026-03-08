@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIX SEC OPS - Aswin TRV</title>
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.json" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --header-bg: #f0f0f0;
+      --table-header-bg: #333333;
+      --table-header-text: #ffffff;
+      --border-color: #cccccc;
+      --control-bg: #ffffff;
+      --control-text: #000000;
+      --delayed-row-bg: #fff0f0;
+      --completed-row-bg: #f0fff0;
+      --primary-color: #007bff;
+      --shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #1a1a1a;
+      --text-color: #ffffff;
+      --header-bg: #2a2a2a;
+      --table-header-bg: #444444;
+      --table-header-text: #ffffff;
+      --border-color: #555555;
+      --control-bg: #333333;
+      --control-text: #ffffff;
+      --delayed-row-bg: #3a2a2a;
+      --completed-row-bg: #2a3a2a;
+      --primary-color: #0056b3;
+      --shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: all 0.3s ease;
+      line-height: 1.4;
+    }
+
+    h2 {
+      background: var(--header-bg);
+      padding: 15px;
+      margin: 0 0 10px 0;
+      border-radius: 8px 8px 0 0;
+      font-size: 1.2em;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px;
+      background: var(--header-bg);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls-left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .controls-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select, button {
+      padding: 8px 12px;
+      background-color: var(--control-bg);
+      color: var(--control-text);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+      min-height: 40px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    select:focus, button:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    button:hover {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .advanced-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      display: inline-block;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .advanced-btn:hover {
+      background: #0056b3;
+    }
+
+    .main-content {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      flex: 1;
+      border-radius: 0 0 8px 8px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      border-top: none;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 12px 6px;
+      text-align: center;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: var(--table-header-bg);
+      color: var(--table-header-text);
+      font-weight: 500;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .status-green { color: green; font-weight: bold; }
+    .status-orange { color: orange; font-weight: bold; }
+    .status-red { color: red; font-weight: bold; }
+
+    .delayed-row { background-color: var(--delayed-row-bg); }
+    .completed-row { background-color: var(--completed-row-bg); }
+
+    .flight-logo {
+      height: 16px;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+
+    #themeToggle {
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        padding: 15px;
+      }
+
+      .controls-left {
+        flex-direction: column;
+        align-items: stretch;
+        min-width: auto;
+      }
+
+      .controls-right {
+        justify-content: center;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      select, button, .advanced-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+
+      .main-content {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .section {
+        margin-bottom: 20px;
+      }
+
+      h2 {
+        padding: 12px;
+        font-size: 1.1em;
+        border-radius: 8px;
+        margin-bottom: 0;
+      }
+
+      .table-container {
+        border-radius: 0 0 8px 8px;
+        max-height: none;
+      }
+
+      th, td {
+        padding: 8px 4px;
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      th, td {
+        padding: 6px 2px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <div class="controls-left">
+      <button id="loadEarlierBtn">Load Earlier Flights</button>
+      <span id="loadingIndicator" style="display: none; color: var(--text-color);">Loading...</span>
+    </div>
+    <div class="controls-right">
+      <a href="indexpc.html" class="advanced-btn" target="_blank">Advanced Version (PC)</a>
+      <button id="themeToggle">Dark Mode</button>
+      <label>
+        Sort by:
+        <select id="sortOption">
+          <option value="scheduled" selected>STA / STD</option>
+          <option value="estimated">ETA / ETD</option>
+          <option value="delayed">Delayed First</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="section">
+      <h2>Arrivals - AIX Security-TRV (IX & UL)</h2>
+      <div class="table-container">
+        <table id="arrivals-table">
+          <thead>
+            <tr>
+              <th>Flight No</th>
+              <th>Registration</th>
+              <th>From</th>
+              <th>ETA</th>
+              <th>STA</th>
+              <th>Aircraft</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Departures - AIX Security-TRV (IX & UL)</h2>
+      <div class="table-container">
+        <table id="departures-table">
+          <thead>
+            <tr>
+              <th>Flight No</th>
+              <th>Registration</th>
+              <th>To</th>
+              <th>ETD</th>
+              <th>STD</th>
+              <th>Aircraft</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const baseUrl = "https://api.flightradar24.com/common/v1/airport.json?code=trv";
+    
+    // Store historical flights to avoid duplicates
+    let historicalFlights = {
+      arrivals: new Set(),
+      departures: new Set()
+    };
+    
+    // Track current timestamp for pagination
+    let currentTimestamp = Math.floor(Date.now() / 1000);
+
+    const getEndpoint = (type, page = 1, timestamp = null) => {
+      const ts = timestamp || Math.floor(Date.now() / 1000);
+      return `${baseUrl}&plugin-setting[schedule][mode]=${type}&plugin-setting[schedule][timestamp]=${ts}&page=${page}&limit=100`;
+    };
+
+    const toLocalTime = ts => {
+      if (!ts) return "-";
+      // Convert UTC timestamp to IST and format in 24-hour format
+      return new Date(ts * 1000).toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    };
+
+    const classifyStatus = (estimated, scheduled) => {
+      if (!estimated || !scheduled) return "status-green";
+      const delay = estimated - scheduled;
+      if (delay <= 0) return "status-green";
+      if (delay <= 900) return "status-orange";
+      return "status-red";
+    };
+
+    const getLogoURL = (flightNumber) => {
+      if (flightNumber.startsWith("IX")) {
+        return "https://cdn.brandfetch.io/idM6IAvrlf/w/820/h/248/theme/dark/logo.png?c=1dxbfHSJFAPEGdCLU4o5B";
+      } else if (flightNumber.startsWith("UL")) {
+        return "https://cdn.flightradar24.com/assets/airlines/logotypes/66.png";
+      }
+      return "";
+    };
+
+    const filterAndSortFlights = (flights, type, isHistorical = false) => {
+      const sortOption = document.getElementById("sortOption").value;
+      const now = Math.floor(Date.now() / 1000);
+      const oneHourInSeconds = 3600;
+
+      return flights.filter(f => {
+        const fn = f.flight?.identification?.number?.default || "";
+        const est = type === "departures" ? f.flight.time.estimated?.departure : f.flight.time.estimated?.arrival;
+        const sch = type === "departures" ? f.flight.time.scheduled?.departure : f.flight.time.scheduled?.arrival;
+        const act = type === "departures" ? f.flight.time.actual?.departure : f.flight.time.actual?.arrival;
+
+        // Always filter for IX and UL
+        const airlineMatch = fn.startsWith("IX") || fn.startsWith("UL");
+
+        // For historical flights, we're more lenient with time filtering
+        if (isHistorical) {
+          // Include flights from the past 24 hours
+          const flightTime = sch || est || now;
+          const twentyFourHoursAgo = now - (24 * 60 * 60);
+          const isWithinTimeWindow = flightTime >= twentyFourHoursAgo;
+          return airlineMatch && isWithinTimeWindow;
+        }
+
+        // Original filtering logic for current flights
+        const flightTime = sch || est || now;
+        const hoursAhead = 20;
+        const twentyHoursFromNow = now + (hoursAhead * 60 * 60);
+        const isWithinTimeWindow = flightTime >= now - oneHourInSeconds && flightTime <= twentyHoursFromNow;
+        
+        if (airlineMatch && isWithinTimeWindow) {
+          // Flight hasn't departed/arrived yet
+          if (!act && (est > now || sch > now)) {
+            return true;
+          }
+          
+          // Flight is delayed (scheduled time is in the past but estimated time is in the future)
+          if (!act && sch < now && est > now) {
+            return true;
+          }
+          
+          // Flight completed within the last hour
+          if (act && act > now - oneHourInSeconds) {
+            return true;
+          }
+        }
+        
+        return false;
+      }).sort((a, b) => {
+        const now = Math.floor(Date.now() / 1000);
+        
+        // Helper to get the time values we need for sorting
+        const getTimeValues = (f) => {
+          const isDep = type === "departures";
+          const est = isDep ? f.flight.time.estimated?.departure : f.flight.time.estimated?.arrival;
+          const sch = isDep ? f.flight.time.scheduled?.departure : f.flight.time.scheduled?.arrival;
+          const act = isDep ? f.flight.time.actual?.departure : f.flight.time.actual?.arrival;
+          const isDelayed = sch && now > sch && (!act || act > now) && (!est || est > now);
+          const isComplete = act && act <= now;
+          
+          return { est, sch, act, isDelayed, isComplete };
+        };
+        
+        const aTime = getTimeValues(a);
+        const bTime = getTimeValues(b);
+        
+        // If sorting by "delayed first"
+        if (sortOption === "delayed") {
+          // First sort by delayed status
+          if (aTime.isDelayed && !bTime.isDelayed) return -1;
+          if (!aTime.isDelayed && bTime.isDelayed) return 1;
+          
+          // Then by completion status (incomplete before complete)
+          if (!aTime.isComplete && bTime.isComplete) return -1;
+          if (aTime.isComplete && !bTime.isComplete) return 1;
+          
+          // Then by estimated time
+          return (aTime.est || aTime.sch || 0) - (bTime.est || bTime.sch || 0);
+        } 
+        // Sort by estimated time
+        else if (sortOption === "estimated") {
+          return (aTime.est || aTime.sch || 0) - (bTime.est || bTime.sch || 0);
+        } 
+        // Sort by scheduled time
+        else {
+          return (aTime.sch || aTime.est || 0) - (bTime.sch || bTime.est || 0);
+        }
+      });
+    };
+
+    const loadFlights = async (type, page = 1, timestamp = null, append = false) => {
+      try {
+        const res = await fetch(getEndpoint(type, page, timestamp));
+        const data = await res.json();
+        const flights = data.result.response.airport.pluginData.schedule[type].data;
+        const tbody = document.querySelector(`#${type}-table tbody`);
+        
+        if (!append) {
+          tbody.innerHTML = "";
+          historicalFlights[type].clear();
+        }
+
+        const filteredFlights = filterAndSortFlights(flights, type, append);
+        const now = Math.floor(Date.now() / 1000);
+        
+        const newRows = [];
+        
+        filteredFlights.forEach(f => {
+          const fl = f.flight;
+          const flightId = fl.identification?.id;
+          
+          // Skip if we already have this flight (avoid duplicates)
+          if (flightId && historicalFlights[type].has(flightId)) {
+            return;
+          }
+          
+          if (flightId) {
+            historicalFlights[type].add(flightId);
+          }
+          
+          const isDep = type === "departures";
+          const est = isDep ? fl.time.estimated?.departure : fl.time.estimated?.arrival;
+          const sch = isDep ? fl.time.scheduled?.departure : fl.time.scheduled?.arrival;
+          const act = isDep ? fl.time.actual?.departure : fl.time.actual?.arrival;
+          const fn = fl.identification.number?.default || "-";
+          const logo = getLogoURL(fn);
+          const reg = fl.aircraft?.registration || "-";
+          const airportCode = isDep ? fl.airport.destination?.code?.iata : fl.airport.origin?.code?.iata || "-";
+          const model = fl.aircraft?.model?.text || "-";
+          const status = fl.status?.text || "-";
+          
+          // Determine if flight is delayed or completed
+          const isDelayed = sch && now > sch && (!act || act > now) && (!est || est > now);
+          const isCompleted = act && act <= now;
+          
+          const row = document.createElement("tr");
+          if (isDelayed) {
+            row.classList.add("delayed-row");
+          } else if (isCompleted) {
+            row.classList.add("completed-row");
+          }
+          
+          row.innerHTML = `
+            <td><img class="flight-logo" src="${logo}" alt="logo"> ${fn}</td>
+            <td>${reg}</td>
+            <td>${airportCode}</td>
+            <td>${toLocalTime(est)}</td>
+            <td>${toLocalTime(sch)}</td>
+            <td>${model}</td>
+            <td class="${classifyStatus(est, sch)}">${status}</td>
+          `;
+          
+          newRows.push({ row, time: sch || est || 0 });
+        });
+        
+        // If appending, we need to insert rows in the correct chronological order
+        if (append && newRows.length > 0) {
+          const existingRows = Array.from(tbody.querySelectorAll('tr'));
+          const allRows = [...newRows.map(item => item.row), ...existingRows];
+          
+          // Re-sort all rows by time
+          const rowsWithTime = allRows.map(row => {
+            const cells = row.querySelectorAll('td');
+            const staCell = cells[4]; // STA/STD column
+            const etaCell = cells[3]; // ETA/ETD column
+            
+            // Extract time from the cell text and convert to comparable format
+            const staTime = staCell?.textContent?.trim();
+            const etaTime = etaCell?.textContent?.trim();
+            
+            // Use the flight data if available, otherwise parse from display
+            let timeValue = 0;
+            if (staTime && staTime !== '-') {
+              const [hours, minutes] = staTime.split(':').map(Number);
+              timeValue = hours * 60 + minutes;
+            }
+            
+            return { row, time: timeValue };
+          });
+          
+          // Sort by time (earliest first)
+          rowsWithTime.sort((a, b) => a.time - b.time);
+          
+          // Clear and re-append all rows
+          tbody.innerHTML = '';
+          rowsWithTime.forEach(item => tbody.appendChild(item.row));
+        } else {
+          // Just append new rows normally
+          newRows.forEach(item => tbody.appendChild(item.row));
+        }
+        
+      } catch (err) {
+        console.error(`Error loading ${type}:`, err);
+      }
+    };
+
+    const refreshAllFlights = () => {
+      // Reset historical data when refreshing
+      historicalFlights.arrivals.clear();
+      historicalFlights.departures.clear();
+      currentTimestamp = Math.floor(Date.now() / 1000);
+      
+      loadFlights("arrivals");
+      loadFlights("departures");
+    };
+
+    const loadEarlierFlights = async () => {
+      const loadingIndicator = document.getElementById("loadingIndicator");
+      const loadEarlierBtn = document.getElementById("loadEarlierBtn");
+      
+      try {
+        loadingIndicator.style.display = "inline";
+        loadEarlierBtn.disabled = true;
+        
+        // Use page=-1 to get earlier flights with current timestamp
+        await Promise.all([
+          loadFlights("arrivals", -1, currentTimestamp, true),
+          loadFlights("departures", -1, currentTimestamp, true)
+        ]);
+        
+        // Update timestamp to go further back next time
+        currentTimestamp -= (6 * 60 * 60); // Go back 6 hours for next load
+        
+      } catch (error) {
+        console.error("Error loading earlier flights:", error);
+      } finally {
+        loadingIndicator.style.display = "none";
+        loadEarlierBtn.disabled = false;
+      }
+    };
+
+    const themeToggle = document.getElementById("themeToggle");
+    const setTheme = (theme) => {
+      document.documentElement.setAttribute("data-theme", theme);
+      themeToggle.textContent = theme === "dark" ? "Light Mode" : "Dark Mode";
+      if (typeof Storage !== "undefined") {
+        localStorage.setItem("theme", theme);
+      }
+    };
+
+    const initializeTheme = () => {
+      let savedTheme = "light";
+      if (typeof Storage !== "undefined") {
+        savedTheme = localStorage.getItem("theme") || "light";
+      }
+      setTheme(savedTheme);
+    };
+
+    themeToggle.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+      setTheme(currentTheme === "dark" ? "light" : "dark");
+    });
+
+    document.getElementById("sortOption").addEventListener("change", refreshAllFlights);
+    document.getElementById("loadEarlierBtn").addEventListener("click", loadEarlierFlights);
+
+    initializeTheme();
+    refreshAllFlights();
+    setInterval(refreshAllFlights, 30000);
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log("SW registered", reg))
+          .catch(err => console.error("SW registration failed:", err));
+      });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.createElement("button");
+      installBtn.textContent = "Install App";
+      installBtn.style = "position:fixed;bottom:10px;right:10px;z-index:1000;padding:8px 12px;border-radius:6px;background:var(--primary-color);color:white;border:none;cursor:pointer;";
+      installBtn.onclick = () => {
+        installBtn.remove();
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(choice => {
+          if (choice.outcome === 'accepted') {
+            console.log("App installed");
+          }
+          deferredPrompt = null;
+        });
+      };
+      document.body.appendChild(installBtn);
+    });
+  </script>
+
+</body>
+</html>
