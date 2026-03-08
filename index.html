@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIX SEC OPS - Aswin TRV</title>
+  <meta name="theme-color" content="#f8f9fa" id="themeColorMeta" />
+  <link rel="manifest" href="manifest.json" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Light Mode Variables */
+      --bg-color: #f4f6f8;
+      --surface-color: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      
+      --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
+      
+      --table-header-bg: #f9fafb;
+      --table-header-text: #4b5563;
+      --row-hover-bg: #f3f4f6;
+      
+      --delayed-row-bg: rgba(254, 242, 242, 0.5);
+      --completed-row-bg: rgba(240, 253, 244, 0.5);
+      
+      /* Badges - Light */
+      --badge-green-bg: #dcfce7; --badge-green-text: #166534;
+      --badge-orange-bg: #fef3c7; --badge-orange-text: #92400e;
+      --badge-red-bg: #fee2e2; --badge-red-text: #991b1b;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    [data-theme="dark"] {
+      /* Dark Mode Variables */
+      --bg-color: #0f172a;
+      --surface-color: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      
+      --primary-color: #3b82f6;
+      --primary-hover: #60a5fa;
+      
+      --table-header-bg: #0f172a;
+      --table-header-text: #cbd5e1;
+      --row-hover-bg: #334155;
+      
+      --delayed-row-bg: rgba(69, 10, 10, 0.3);
+      --completed-row-bg: rgba(5, 46, 22, 0.3);
+      
+      /* Badges - Dark */
+      --badge-green-bg: rgba(22, 101, 52, 0.4); --badge-green-text: #4ade80;
+      --badge-orange-bg: rgba(146, 64, 14, 0.4); --badge-orange-text: #fbbf24;
+      --badge-red-bg: rgba(153, 27, 27, 0.4); --badge-red-text: #f87171;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      transition: background-color 0.3s ease, color 0.3s ease;
+      line-height: 1.5;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header & Controls */
+    .dashboard-header {
+      background: var(--surface-color);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .controls-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Form Elements */
+    select, button, .advanced-btn {
+      padding: 10px 16px;
+      background-color: var(--surface-color);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    select:focus, button:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    select:hover, button:not(.btn-primary):hover {
+      background-color: var(--row-hover-bg);
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      color: white;
+    }
+
+    .controls-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Typography */
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 32px 0 16px 0;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2::before {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 24px;
+      background-color: var(--primary-color);
+      border-radius: 4px;
+    }
+
+    /* Tables */
+    .table-container {
+      background: var(--surface-color);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+      margin-bottom: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+
+    th {
+      background-color: var(--table-header-bg);
+      color: var(--table-header-text);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    tbody tr {
+      transition: background-color 0.2s ease;
+    }
+
+    tbody tr:hover {
+      background-color: var(--row-hover-bg);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .delayed-row { background-color: var(--delayed-row-bg); }
+    .completed-row { background-color: var(--completed-row-bg); }
+
+    /* Flight Specific Elements */
+    .flight-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .flight-logo {
+      height: 20px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 2px;
+    }
+
+    .text-mono {
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .status-green { background-color: var(--badge-green-bg); color: var(--badge-green-text); }
+    .status-orange { background-color: var(--badge-orange-bg); color: var(--badge-orange-text); }
+    .status-red { background-color: var(--badge-red-bg); color: var(--badge-red-text); }
+
+    /* Loading Spinner */
+    #loadingIndicator {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-color); 
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1; 
+      border-radius: 4px;
+    }
+    [data-theme="dark"] ::-webkit-scrollbar-thumb {
+      background: #475569; 
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+      
+      .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .controls-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      select, button, .advanced-btn {
+        width: 100%;
+        font-size: 1rem; /* Prevents iOS zoom */
+        padding: 12px;
+      }
+
+      .controls-label {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      th, td {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-header">
+    <div class="controls-group">
+      <button id="loadEarlierBtn" class="btn-primary">
+        <svg style="width:16px;height:16px;margin-right:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Load Earlier Flights
+      </button>
+      <span id="loadingIndicator" style="display: none;">Loading data...</span>
+    </div>
+    <div class="controls-group">
+      <label class="controls-label">
+        Sort by
+        <select id="sortOption">
+          <option value="scheduled" selected>STA / STD</option>
+          <option value="estimated">ETA / ETD</option>
+          <option value="delayed">Delayed First</option>
+        </select>
+      </label>
+      <a href="indexpc.html" class="advanced-btn" target="_blank">Advanced (PC)</a>
+      <button id="themeToggle">
+        <svg style="width:18px;height:18px;margin-right:6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        Theme
+      </button>
+    </div>
+  </div>
+
+  <h2>Arrivals - AIX Security-TRV (IX & UL)</h2>
+  <div class="table-container">
+    <table id="arrivals-table">
+      <thead>
+        <tr>
+          <th>Flight</th>
+          <th>Reg</th>
+          <th>Origin</th>
+          <th>ETA</th>
+          <th>STA</th>
+          <th>Aircraft</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <h2>Departures - AIX Security-TRV (IX & UL)</h2>
+  <div class="table-container">
+    <table id="departures-table">
+      <thead>
+        <tr>
+          <th>Flight</th>
+          <th>Reg</th>
+          <th>Destination</th>
+          <th>ETD</th>
+          <th>STD</th>
+          <th>Aircraft</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const baseUrl = "https://api.flightradar24.com/common/v1/airport.json?code=trv";
+    
+    // Store historical flights to avoid duplicates
+    let historicalFlights = {
+      arrivals: new Set(),
+      departures: new Set()
+    };
+    
+    // Track current timestamp for pagination
+    let currentTimestamp = Math.floor(Date.now() / 1000);
+
+    const getEndpoint = (type, page = 1, timestamp = null) => {
+      const ts = timestamp || Math.floor(Date.now() / 1000);
+      return `${baseUrl}&plugin-setting[schedule][mode]=${type}&plugin-setting[schedule][timestamp]=${ts}&page=${page}&limit=100`;
+    };
+
+    const toLocalTime = ts => {
+      if (!ts) return "-";
+      return new Date(ts * 1000).toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    };
+
+    const classifyStatus = (estimated, scheduled) => {
+      if (!estimated || !scheduled) return "status-green";
+      const delay = estimated - scheduled;
+      if (delay <= 0) return "status-green";
+      if (delay <= 900) return "status-orange";
+      return "status-red";
+    };
+
+    const getLogoURL = (flightNumber) => {
+      if (flightNumber.startsWith("IX")) {
+        return "https://cdn.brandfetch.io/idM6IAvrlf/w/820/h/248/theme/dark/logo.png?c=1dxbfHSJFAPEGdCLU4o5B";
+      } else if (flightNumber.startsWith("UL")) {
+        return "https://cdn.flightradar24.com/assets/airlines/logotypes/66.png";
+      }
+      return "";
+    };
+
+    const filterAndSortFlights = (flights, type, isHistorical = false) => {
+      const sortOption = document.getElementById("sortOption").value;
+      const now = Math.floor(Date.now() / 1000);
+      const oneHourInSeconds = 3600;
+
+      return flights.filter(f => {
+        const fn = f.flight?.identification?.number?.default || "";
+        const est = type === "departures" ? f.flight.time.estimated?.departure : f.flight.time.estimated?.arrival;
+        const sch = type === "departures" ? f.flight.time.scheduled?.departure : f.flight.time.scheduled?.arrival;
+        const act = type === "departures" ? f.flight.time.actual?.departure : f.flight.time.actual?.arrival;
+
+        const airlineMatch = fn.startsWith("IX") || fn.startsWith("UL");
+
+        if (isHistorical) {
+          const flightTime = sch || est || now;
+          const twentyFourHoursAgo = now - (24 * 60 * 60);
+          return airlineMatch && (flightTime >= twentyFourHoursAgo);
+        }
+
+        const flightTime = sch || est || now;
+        const hoursAhead = 20;
+        const twentyHoursFromNow = now + (hoursAhead * 60 * 60);
+        const isWithinTimeWindow = flightTime >= now - oneHourInSeconds && flightTime <= twentyHoursFromNow;
+        
+        if (airlineMatch && isWithinTimeWindow) {
+          if (!act && (est > now || sch > now)) return true;
+          if (!act && sch < now && est > now) return true;
+          if (act && act > now - oneHourInSeconds) return true;
+        }
+        return false;
+      }).sort((a, b) => {
+        const now = Math.floor(Date.now() / 1000);
+        
+        const getTimeValues = (f) => {
+          const isDep = type === "departures";
+          const est = isDep ? f.flight.time.estimated?.departure : f.flight.time.estimated?.arrival;
+          const sch = isDep ? f.flight.time.scheduled?.departure : f.flight.time.scheduled?.arrival;
+          const act = isDep ? f.flight.time.actual?.departure : f.flight.time.actual?.arrival;
+          const isDelayed = sch && now > sch && (!act || act > now) && (!est || est > now);
+          const isComplete = act && act <= now;
+          return { est, sch, act, isDelayed, isComplete };
+        };
+        
+        const aTime = getTimeValues(a);
+        const bTime = getTimeValues(b);
+        
+        if (sortOption === "delayed") {
+          if (aTime.isDelayed && !bTime.isDelayed) return -1;
+          if (!aTime.isDelayed && bTime.isDelayed) return 1;
+          if (!aTime.isComplete && bTime.isComplete) return -1;
+          if (aTime.isComplete && !bTime.isComplete) return 1;
+          return (aTime.est || aTime.sch || 0) - (bTime.est || bTime.sch || 0);
+        } else if (sortOption === "estimated") {
+          return (aTime.est || aTime.sch || 0) - (bTime.est || bTime.sch || 0);
+        } else {
+          return (aTime.sch || aTime.est || 0) - (bTime.sch || bTime.est || 0);
+        }
+      });
+    };
+
+    const loadFlights = async (type, page = 1, timestamp = null, append = false) => {
+      try {
+        const res = await fetch(getEndpoint(type, page, timestamp));
+        const data = await res.json();
+        const flights = data.result.response.airport.pluginData.schedule[type].data;
+        const tbody = document.querySelector(`#${type}-table tbody`);
+        
+        if (!append) {
+          tbody.innerHTML = "";
+          historicalFlights[type].clear();
+        }
+
+        const filteredFlights = filterAndSortFlights(flights, type, append);
+        const now = Math.floor(Date.now() / 1000);
+        const newRows = [];
+        
+        filteredFlights.forEach(f => {
+          const fl = f.flight;
+          const flightId = fl.identification?.id;
+          
+          if (flightId && historicalFlights[type].has(flightId)) return;
+          if (flightId) historicalFlights[type].add(flightId);
+          
+          const isDep = type === "departures";
+          const est = isDep ? fl.time.estimated?.departure : fl.time.estimated?.arrival;
+          const sch = isDep ? fl.time.scheduled?.departure : fl.time.scheduled?.arrival;
+          const act = isDep ? fl.time.actual?.departure : fl.time.actual?.arrival;
+          const fn = fl.identification.number?.default || "-";
+          const logo = getLogoURL(fn);
+          const reg = fl.aircraft?.registration || "-";
+          const airportCode = isDep ? fl.airport.destination?.code?.iata : fl.airport.origin?.code?.iata || "-";
+          const model = fl.aircraft?.model?.text || "-";
+          const status = fl.status?.text || "-";
+          
+          const isDelayed = sch && now > sch && (!act || act > now) && (!est || est > now);
+          const isCompleted = act && act <= now;
+          
+          const row = document.createElement("tr");
+          if (isDelayed) row.classList.add("delayed-row");
+          else if (isCompleted) row.classList.add("completed-row");
+          
+          row.innerHTML = `
+            <td>
+              <div class="flight-cell">
+                ${logo ? `<img class="flight-logo" src="${logo}" alt="${fn.substring(0,2)}">` : ''}
+                ${fn}
+              </div>
+            </td>
+            <td class="text-mono">${reg}</td>
+            <td style="font-weight: 500;">${airportCode}</td>
+            <td>${toLocalTime(est)}</td>
+            <td>${toLocalTime(sch)}</td>
+            <td style="color: var(--text-muted); font-size: 0.85rem;">${model}</td>
+            <td><span class="status-badge ${classifyStatus(est, sch)}">${status}</span></td>
+          `;
+          
+          newRows.push({ row, time: sch || est || 0 });
+        });
+        
+        if (append && newRows.length > 0) {
+          const existingRows = Array.from(tbody.querySelectorAll('tr'));
+          const allRows = [...newRows.map(item => item.row), ...existingRows];
+          
+          const rowsWithTime = allRows.map(row => {
+            const cells = row.querySelectorAll('td');
+            const staTime = cells[4]?.textContent?.trim();
+            let timeValue = 0;
+            if (staTime && staTime !== '-') {
+              const [hours, minutes] = staTime.split(':').map(Number);
+              timeValue = hours * 60 + minutes;
+            }
+            return { row, time: timeValue };
+          });
+          
+          rowsWithTime.sort((a, b) => a.time - b.time);
+          tbody.innerHTML = '';
+          rowsWithTime.forEach(item => tbody.appendChild(item.row));
+        } else {
+          newRows.forEach(item => tbody.appendChild(item.row));
+        }
+      } catch (err) {
+        console.error(`Error loading ${type}:`, err);
+      }
+    };
+
+    const refreshAllFlights = () => {
+      historicalFlights.arrivals.clear();
+      historicalFlights.departures.clear();
+      currentTimestamp = Math.floor(Date.now() / 1000);
+      loadFlights("arrivals");
+      loadFlights("departures");
+    };
+
+    const loadEarlierFlights = async () => {
+      const loadingIndicator = document.getElementById("loadingIndicator");
+      const loadEarlierBtn = document.getElementById("loadEarlierBtn");
+      
+      try {
+        loadingIndicator.style.display = "inline";
+        loadEarlierBtn.disabled = true;
+        
+        await Promise.all([
+          loadFlights("arrivals", -1, currentTimestamp, true),
+          loadFlights("departures", -1, currentTimestamp, true)
+        ]);
+        
+        currentTimestamp -= (6 * 60 * 60); 
+      } catch (error) {
+        console.error("Error loading earlier flights:", error);
+      } finally {
+        loadingIndicator.style.display = "none";
+        loadEarlierBtn.disabled = false;
+      }
+    };
+
+    const themeToggle = document.getElementById("themeToggle");
+    const metaThemeColor = document.getElementById("themeColorMeta");
+    
+    const setTheme = (theme) => {
+      document.documentElement.setAttribute("data-theme", theme);
+      metaThemeColor.setAttribute("content", theme === "dark" ? "#0f172a" : "#f8f9fa");
+      if (typeof Storage !== "undefined") {
+        localStorage.setItem("theme", theme);
+      }
+    };
+
+    const initializeTheme = () => {
+      let savedTheme = "light";
+      if (typeof Storage !== "undefined") {
+        savedTheme = localStorage.getItem("theme") || "light";
+      }
+      setTheme(savedTheme);
+    };
+
+    themeToggle.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+      setTheme(currentTheme === "dark" ? "light" : "dark");
+    });
+
+    document.getElementById("sortOption").addEventListener("change", refreshAllFlights);
+    document.getElementById("loadEarlierBtn").addEventListener("click", loadEarlierFlights);
+
+    initializeTheme();
+    refreshAllFlights();
+    setInterval(refreshAllFlights, 30000);
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log("SW registered", reg))
+          .catch(err => console.error("SW registration failed:", err));
+      });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.createElement("button");
+      installBtn.textContent = "Install App";
+      installBtn.className = "btn-primary";
+      installBtn.style = "position:fixed;bottom:20px;right:20px;z-index:1000;box-shadow:var(--shadow-md);border-radius:24px;padding:12px 24px;";
+      installBtn.onclick = () => {
+        installBtn.remove();
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(choice => {
+          if (choice.outcome === 'accepted') {
+            console.log("App installed");
+          }
+          deferredPrompt = null;
+        });
+      };
+      document.body.appendChild(installBtn);
+    });
+  </script>
+
+</body>
+</html>
