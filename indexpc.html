@@ -189,7 +189,7 @@ const getEndpoint = (type, ts) =>
 
 const toTime = t => t ? new Date(t * 1000).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false }) : "-";
 
-const airlineAllowed = fn => ["IX","AK","FD","J9","UL","FZ"].some(a => fn.startsWith(a));
+const airlineAllowed = fn => ["IX","UL"].some(a => fn.startsWith(a));
 
 const getLogo = fn => {
   if (fn.startsWith("AK") || fn.startsWith("FD")) {
